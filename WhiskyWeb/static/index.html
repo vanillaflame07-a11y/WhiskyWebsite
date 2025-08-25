@@ -245,7 +245,7 @@
     async function fetchWhiskies() {
       try {
         // Render 배포 주소로 수정해야 함!
-        const response = await fetch('https://your-app.onrender.com/api/whiskies');
+        const response = await fetch('https://whiskywebsite.onrender.com');
         const data = await response.json();
         whiskies = data;
         renderList();
