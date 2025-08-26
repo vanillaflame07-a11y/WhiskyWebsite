@@ -6,6 +6,10 @@ import os, time, csv, io, requests
 app = Flask(__name__, static_folder="static")
 CORS(app)
 
+# ✅ 한글 JSON을 유니코드 이스케이프 없이, UTF-8로 내보내기
+app.config["JSON_AS_ASCII"] = False
+app.config["JSONIFY_MIMETYPE"] = "application/json; charset=utf-8"
+
 # ====== 설정 ======
 # 각 시트(탭)를 "웹에 게시 -> CSV"로 만든 URL을 Render 환경변수에 넣어두세요.
 CSV_URLS = {
@@ -33,6 +37,7 @@ def _fetch_csv(url: str):
         return []
     r = requests.get(url, timeout=15)
     r.raise_for_status()
+    r.encoding = "utf-8"   # ✅ 한글 깨짐 방지: UTF-8로 강제 지정
     f = io.StringIO(r.text)
     return list(csv.DictReader(f))
 
