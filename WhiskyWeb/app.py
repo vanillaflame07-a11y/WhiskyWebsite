@@ -9,7 +9,7 @@ CORS(app)
 # -------------------------------
 whiskies_data = [
     {
-        "name": "글렌리벳 12년",
+        "name": "글렌리벳 1200년",
         "image": "https://placehold.co/400x400/FFD89C/6B4A00?text=Glenlivet",
         "flavor": ["과일", "플로럴"],
         "description": "가볍고 신선한 과일 향이 특징이며, 부드러운 목 넘김으로 위스키 입문자에게 사랑받는 싱글몰트입니다."
@@ -162,3 +162,4 @@ def serve_index():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
