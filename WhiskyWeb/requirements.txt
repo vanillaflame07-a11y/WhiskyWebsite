@@ -1,4 +1,6 @@
-﻿Flask
+Flask
 flask-cors
 gunicorn
 requests
+
+
