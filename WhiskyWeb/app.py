@@ -2,14 +2,12 @@
 
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
-import os
 
 # Flask 앱 생성
 app = Flask(__name__, static_folder="static")
-# CORS(Cross-Origin Resource Sharing) 설정 - 다른 출처의 요청을 허용
 CORS(app)
 
-# 위스키 데이터 (기존 자바스크립트 데이터를 파이썬 딕셔너리 리스트로 변환)
+# 위스키 데이터
 whiskies_data = [
     {
         "name": "글렌리벳 12년",
@@ -52,36 +50,112 @@ whiskies_data = [
         "image": "https://placehold.co/400x400/F0E0D0/544C40?text=Yamazaki",
         "flavor": ["과일", "바닐라", "오크"],
         "description": "일본 위스키의 선구자로 부드럽고 섬세한 맛이 특징입니다. 과일과 오크의 풍미가 조화롭고 깔끔합니다."
-    },
-    {
-        "name": "위스키 이름",
-        "image": "https://placehold.co/400x400/F0E0D0/544C40?text=Yamaz",
-        "flavor": ["과일", "바닐라"],
-        "description": "위스키 설명"
     }
-    
 ]
 
+# 테스트 질문
+questions_data = [
+    {
+        "id": "q1",
+        "text": "지금 디저트를 고른다면?",
+        "options": [
+            {"value": "fruit", "label": "A. 과일 타르트 🍏"},
+            {"value": "choco", "label": "B. 초콜릿 케이크 🍫"}
+        ]
+    },
+    {
+        "id": "q2",
+        "text": "여행지에서 더 끌리는 풍경은?",
+        "options": [
+            {"value": "sea", "label": "A. 바닷바람 🌊"},
+            {"value": "forest", "label": "B. 숲속의 나무 향기 🌲"}
+        ]
+    },
+    {
+        "id": "q3",
+        "text": "저녁에 불멍할 때 더 좋은 건?",
+        "options": [
+            {"value": "campfire", "label": "A. 은은한 모닥불 향 🔥"},
+            {"value": "bbq", "label": "B. 강렬한 바비큐 연기 🍖"}
+        ]
+    },
+    {
+        "id": "q4",
+        "text": "카페에 가면 더 땡기는 건?",
+        "options": [
+            {"value": "latte", "label": "A. 카라멜 마키아토/바닐라 라떼 ☕"},
+            {"value": "espresso", "label": "B. 진한 에스프레소 ☕"}
+        ]
+    },
+    {
+        "id": "q5",
+        "text": "술 마신 뒤 어떤 느낌이 더 좋아요?",
+        "options": [
+            {"value": "light", "label": "A. 산뜻하게 사라지는 여운 🌬️"},
+            {"value": "heavy", "label": "B. 진하게 오래 남는 여운 🕰️"}
+        ]
+    },
+    {
+        "id": "q6",
+        "text": "파티에서 내가 고를 안주는?",
+        "options": [
+            {"value": "popcorn", "label": "A. 구운 옥수수, 캐러멜 팝콘 🍿"},
+            {"value": "nuts", "label": "B. 구운 견과류, 치즈 🧀"}
+        ]
+    }
+]
+
+# 점수 매핑
+scores_data = {
+    "fruit": {"fruit": 2, "japan": 1},
+    "choco": {"dried": 2, "nutty": 1},
+    "sea": {"sea": 2, "smoky_light": 1},
+    "forest": {"vanilla": 2, "spicy": 1},
+    "campfire": {"smoky_light": 2, "vanilla": 1},
+    "bbq": {"smoky_heavy": 3},
+    "latte": {"vanilla": 2, "bourbon": 1},
+    "espresso": {"nutty": 2, "spicy": 1},
+    "light": {"fruit": 2, "japan": 1},
+    "heavy": {"dried": 2, "smoky_heavy": 1},
+    "popcorn": {"bourbon": 2, "vanilla": 1},
+    "nuts": {"nutty": 2, "spicy": 1}
+}
+
+# 타입 설명
+whisky_types_data = {
+    "fruit": "가볍고 달콤한 과일 타입 (글렌리벳 12, 글렌피딕 12 등)",
+    "vanilla": "부드러운 바닐라·꿀 타입 (발베니 더블우드, 아벨라워 12 등)",
+    "nutty": "고소·견과·구운 빵 타입 (글렌드로낙 12, 맥캘란 12 등)",
+    "spicy": "스파이시·따뜻한 타입 (글렌드로낙 15, 맥캘란 셰리 오크 등)",
+    "dried": "진한 과일잼·건과일 타입 (글렌드로낙 18, 아벨라워 아부나흐 등)",
+    "sea": "바닷바람·짭짤한 타입 (탈리스커 10, 올드 풀트니 등)",
+    "smoky_light": "은은한 스모키 타입 (하이랜드 파크 12, 보모어 12 등)",
+    "smoky_heavy": "강렬한 스모키/피트 타입 (라프로익 10, 라가불린 16, 아드벡 10 등)",
+    "bourbon": "미국 버번 타입 (메이커스 마크, 버팔로 트레이스 등)",
+    "japan": "일본 위스키 타입 (야마자키 12, 하쿠슈 등)"
+}
+
+# API 라우트
 @app.route("/api/whiskies")
 def get_whiskies():
     return jsonify(whiskies_data)
 
+@app.route("/api/questions")
+def get_questions():
+    return jsonify(questions_data)
 
-# 기본 루트에서 index.html 제공
+@app.route("/api/scores")
+def get_scores():
+    return jsonify(scores_data)
+
+@app.route("/api/whisky_types")
+def get_whisky_types():
+    return jsonify(whisky_types_data)
+
+# index.html 서빙
 @app.route("/")
 def serve_index():
     return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-    
-
-"""
-    {
-        "name": "위스키 이름",
-        "image": "https://placehold.co/400x400/F0E0D0/544C40?text=Yamaz",
-        "flavor": ["과일", "바닐라"],
-        "description": "위스키 설명"
-    }
-
-"""
