@@ -10,7 +10,7 @@ CORS(app)
 # -------------------------------
 # 1. '웹에 게시'를 통해 생성된 CSV 링크를 여기에 붙여넣으세요.
 # -------------------------------
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1HA055BZ-PsNbKgk8KjKCGsoBGJ-ahANAXxsoRGiW5XA/edit?usp=sharing"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXLg4AKSHfSCm9ZWs5fULAre8KC3RSAXMOhVKuSiZaydddlYIRa8cq8yYtq7zpJOisxnsLNdVNOPbB/pub?output=csv"
 
 # -------------------------------
 # 2. 위스키 데이터를 구글 시트에서 가져오는 함수
@@ -150,3 +150,4 @@ def serve_index():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
