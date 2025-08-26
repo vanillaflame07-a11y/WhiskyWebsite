@@ -9,11 +9,11 @@ CORS(app)
 # ====== 설정 ======
 # 각 시트(탭)를 "웹에 게시 -> CSV"로 만든 URL을 Render 환경변수에 넣어두세요.
 CSV_URLS = {
-    "whiskies": os.getenv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTXLg4AKSHfSCm9ZWs5fULAre8KC3RSAXMOhVKuSiZaydddlYIRa8cq8yYtq7zpJOisxnsLNdVNOPbB/pub?gid=1458722521&single=true&output=csv"),
-    "questions": os.getenv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTXLg4AKSHfSCm9ZWs5fULAre8KC3RSAXMOhVKuSiZaydddlYIRa8cq8yYtq7zpJOisxnsLNdVNOPbB/pub?gid=373232502&single=true&output=csv"),
-    "options": os.getenv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTXLg4AKSHfSCm9ZWs5fULAre8KC3RSAXMOhVKuSiZaydddlYIRa8cq8yYtq7zpJOisxnsLNdVNOPbB/pub?gid=218514580&single=true&output=csv"),
-    "scores": os.getenv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTXLg4AKSHfSCm9ZWs5fULAre8KC3RSAXMOhVKuSiZaydddlYIRa8cq8yYtq7zpJOisxnsLNdVNOPbB/pub?gid=1414982321&single=true&output=csv"),
-    "types": os.getenv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTXLg4AKSHfSCm9ZWs5fULAre8KC3RSAXMOhVKuSiZaydddlYIRa8cq8yYtq7zpJOisxnsLNdVNOPbB/pub?gid=259403597&single=true&output=csv"),
+    "whiskies": os.getenv("WHISKIES_CSV"),
+    "questions": os.getenv("QUESTIONS_CSV"),
+    "options": os.getenv("OPTIONS_CSV"),
+    "scores": os.getenv("SCORES_CSV"),
+    "types": os.getenv("TYPES_CSV"),
 }
 
 # 캐시 TTL(초). Render 무료 플랜이면 너무 짧게 하지 말 것.
