@@ -1,152 +1,259 @@
-<script>
-  let whiskies = [];
-  let scores = {};
-  let whiskyTypes = {};
-  let questions = [];
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나만의 위스키 가이드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .main-bg {
+      background-color: #f7f7f7;
+    }
+  </style>
+</head>
+<body class="main-bg min-h-screen flex items-center justify-center p-4 sm:p-6">
 
-  const mainView = document.getElementById("mainView");
-  const testView = document.getElementById("testView");
-  const detailView = document.getElementById("detailView");
-  const whiskyList = document.getElementById("whiskyList");
-  const searchBox = document.getElementById("searchBox");
-  const resultDiv = document.getElementById("result");
-  const detailContentDiv = document.getElementById("detailContent");
-  const quizForm = document.getElementById("quizForm");
+  <!-- 메인 뷰 -->
+  <div id="mainView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl transition-all duration-300">
+    <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-gray-800 mb-6 tracking-wide">
+      🥃 나만의 위스키 가이드
+    </h1>
+    
+    <div class="relative mb-6">
+      <input type="text" id="searchBox" placeholder="위스키 이름 또는 특징으로 검색..." class="w-full py-3 px-4 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-shadow text-gray-700 placeholder-gray-400">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+    </div>
+    
+    <button onclick="startTest()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors shadow-md transform hover:scale-105 duration-200 mb-6">
+      🧭 위스키 취향 테스트
+    </button>
+    
+    <div id="whiskyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
 
-  function renderList(filter = "") {
-    whiskyList.innerHTML = "";
-    const filteredWhiskies = whiskies.filter(w =>
-      w.name.toLowerCase().includes(filter.toLowerCase()) ||
-      w.flavor.some(f => f.toLowerCase().includes(filter.toLowerCase()))
-    );
-
-    filteredWhiskies.forEach((w) => {
-      const card = document.createElement("div");
-      card.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 transform hover:-translate-y-1";
-      card.innerHTML = `
-        <img src="${w.image}" alt="${w.name}" class="rounded-lg mb-2 w-full h-auto object-cover">
-        <h3 class="text-xl font-bold text-gray-800">${w.name}</h3>
-        <p class="text-sm text-gray-500 mt-1">${w.flavor.join(", ")}</p>
-      `;
-      card.addEventListener("click", () => showDetail(w));
-      whiskyList.appendChild(card);
-    });
-  }
-
-  function startTest() {
-    mainView.classList.add("hidden");
-    testView.classList.remove("hidden");
-  }
-
-  function goBack() {
-    mainView.classList.add("hidden");
-    testView.classList.add("hidden");
-    detailView.classList.add("hidden");
-    mainView.classList.remove("hidden");
-    resultDiv.innerHTML = '';
-    resultDiv.classList.add("hidden");
-  }
-
-  function showDetail(whisky) {
-    detailContentDiv.innerHTML = `
-      <div class="text-center">
-        <img src="${whisky.image}" alt="${whisky.name}" class="rounded-lg mb-4 w-48 h-48 sm:w-64 sm:h-64 mx-auto object-cover shadow-md">
-        <h2 class="text-3xl font-bold text-gray-800 mb-2">${whisky.name}</h2>
-        <p class="text-lg text-gray-600 mb-4">${whisky.flavor.join(", ")}</p>
-        <p class="text-gray-700 leading-relaxed">${whisky.description}</p>
+  <!-- 테스트 뷰 -->
+  <div id="testView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl hidden transition-all duration-300">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">🥃 위스키 취향 테스트</h2>
+    <form id="quizForm">
+      <div class="question bg-gray-50 p-4 rounded-lg mb-4">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Q1. 지금 디저트를 고른다면?</p>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q1" value="fruit" class="mr-2"> A. 과일 타르트 🍏
+        </label>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q1" value="choco" class="mr-2"> B. 초콜릿 케이크 🍫
+        </label>
       </div>
-    `;
-    mainView.classList.add("hidden");
-    detailView.classList.remove("hidden");
-  }
-
-  function calculateResult() {
-    const answers = new FormData(quizForm);
-    let totals = {};
-    let totalScore = 0;
-    let allAnswered = true;
-
-    for (let q of questions) {
-      const answer = answers.get(q.id);
-      if (!answer) {
-        allAnswered = false;
-        break;
-      }
-      if (scores[answer]) {
-        for (const [type, val] of Object.entries(scores[answer])) {
-          totals[type] = (totals[type] || 0) + val;
-          totalScore += val;
-        }
-      }
-    }
-
-    let html = `<h3 class="text-2xl font-bold mb-4">🥂 당신의 위스키 취향은...</h3>`;
-    if (!allAnswered) {
-      html += `<p class="text-lg text-red-500">모든 질문에 답해주세요!</p>`;
-      resultDiv.innerHTML = html;
-      resultDiv.classList.remove("hidden");
-      return;
-    }
-
-    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-    sorted.forEach(([type, val], idx) => {
-      const percent = ((val / totalScore) * 100).toFixed(1);
-      html += `<p class="mb-2 text-lg"><strong class="font-semibold">${idx + 1}.</strong> ${whiskyTypes[type]}<br> <span class="text-sm text-gray-500">점수: ${val}점 (${percent}%)</span></p>`;
-    });
-
-    resultDiv.innerHTML = html;
-    resultDiv.classList.remove("hidden");
-  }
-
-  async function fetchWhiskies() {
-    try {
-      const response = await fetch('/api/whiskies');
-      const data = await response.json();
-      whiskies = data;
-      renderList();
-    } catch (error) {
-      console.error('위스키 데이터를 가져오는 데 실패했습니다:', error);
-      whiskyList.innerHTML = '<p class="text-red-500">데이터를 불러오는 데 실패했습니다.</p>';
-    }
-  }
-
-  async function fetchTestData() {
-    try {
-      const [qRes, sRes, tRes] = await Promise.all([
-        fetch("/api/questions"),
-        fetch("/api/scores"),
-        fetch("/api/whisky_types")
-      ]);
-      questions = await qRes.json();
-      scores = await sRes.json();
-      whiskyTypes = await tRes.json();
-      renderQuestions();
-    } catch (err) {
-      console.error("테스트 데이터 불러오기 실패:", err);
-    }
-  }
-
-  function renderQuestions() {
-    quizForm.innerHTML = "";
-    questions.forEach(q => {
-      const div = document.createElement("div");
-      div.className = "question bg-gray-50 p-4 rounded-lg mb-4";
-      div.innerHTML = `<p class="text-lg font-semibold text-gray-700 mb-2">${q.text}</p>`;
-      q.options.forEach(opt => {
-        div.innerHTML += `
-          <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
-            <input type="radio" name="${q.id}" value="${opt.value}" class="mr-2"> ${opt.label}
-          </label>`;
-      });
-      quizForm.appendChild(div);
-    });
-    quizForm.innerHTML += `
+      <div class="question bg-gray-50 p-4 rounded-lg mb-4">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Q2. 여행지에서 더 끌리는 풍경은?</p>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q2" value="sea" class="mr-2"> A. 바닷바람 🌊
+        </label>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q2" value="forest" class="mr-2"> B. 숲속의 나무 향기 🌲
+        </label>
+      </div>
+      <div class="question bg-gray-50 p-4 rounded-lg mb-4">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Q3. 저녁에 불멍할 때 더 좋은 건?</p>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q3" value="campfire" class="mr-2"> A. 은은한 모닥불 향 🔥
+        </label>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q3" value="bbq" class="mr-2"> B. 강렬한 바비큐 연기 🍖
+        </label>
+      </div>
+      <div class="question bg-gray-50 p-4 rounded-lg mb-4">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Q4. 카페에 가면 더 땡기는 건?</p>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q4" value="latte" class="mr-2"> A. 카라멜 마키아토/바닐라 라떼 ☕
+        </label>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q4" value="espresso" class="mr-2"> B. 진한 에스프레소 ☕
+        </label>
+      </div>
+      <div class="question bg-gray-50 p-4 rounded-lg mb-4">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Q5. 술 마신 뒤 어떤 느낌이 더 좋아요?</p>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q5" value="light" class="mr-2"> A. 산뜻하게 사라지는 여운 🌬️
+        </label>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q5" value="heavy" class="mr-2"> B. 진하게 오래 남는 여운 🕰️
+        </label>
+      </div>
+      <div class="question bg-gray-50 p-4 rounded-lg mb-4">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Q6. 파티에서 내가 고를 안주는?</p>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q6" value="popcorn" class="mr-2"> A. 구운 옥수수, 캐러멜 팝콘 🍿
+        </label>
+        <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+          <input type="radio" name="q6" value="nuts" class="mr-2"> B. 구운 견과류, 치즈 🧀
+        </label>
+      </div>
+      
       <button type="button" onclick="calculateResult()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors shadow-md transform hover:scale-105 duration-200">
         결과 보기
-      </button>`;
-  }
+      </button>
+    </form>
+    <div id="result" class="result hidden mt-6 p-4 rounded-lg bg-yellow-50 text-gray-800"></div>
+    <div class="back-button text-center mt-6 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer" onclick="goBack()">
+      ← 메인으로 돌아가기
+    </div>
+  </div>
 
-  searchBox.addEventListener("input", (e) => renderList(e.target.value));
-  fetchWhiskies();
-  fetchTestData();
-</script>
+  <!-- 상세보기 뷰 -->
+  <div id="detailView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl hidden transition-all duration-300">
+    <div id="detailContent"></div>
+    <div class="back-button text-center mt-6 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer" onclick="goBack()">
+      ← 목록으로 돌아가기
+    </div>
+  </div>
+
+  <script>
+    let whiskies = [];
+
+    const scores = {
+      fruit: { fruit: 2, japan: 1 },
+      choco: { dried: 2, nutty: 1 },
+      sea: { sea: 2, smoky_light: 1 },
+      forest: { vanilla: 2, spicy: 1 },
+      campfire: { smoky_light: 2, vanilla: 1 },
+      bbq: { smoky_heavy: 3 },
+      latte: { vanilla: 2, bourbon: 1 },
+      espresso: { nutty: 2, spicy: 1 },
+      light: { fruit: 2, japan: 1 },
+      heavy: { dried: 2, smoky_heavy: 1 },
+      popcorn: { bourbon: 2, vanilla: 1 },
+      nuts: { nutty: 2, spicy: 1 }
+    };
+
+    const whiskyTypes = {
+      fruit: "가볍고 달콤한 과일 타입 (글렌리벳 12, 글렌피딕 12 등)",
+      vanilla: "부드러운 바닐라·꿀 타입 (발베니 더블우드, 아벨라워 12 등)",
+      nutty: "고소·견과·구운 빵 타입 (글렌드로낙 12, 맥캘란 12 등)",
+      spicy: "스파이시·따뜻한 타입 (글렌드로낙 15, 맥캘란 셰리 오크 등)",
+      dried: "진한 과일잼·건과일 타입 (글렌드로낙 18, 아벨라워 아부나흐 등)",
+      sea: "바닷바람·짭짤한 타입 (탈리스커 10, 올드 풀트니 등)",
+      smoky_light: "은은한 스모키 타입 (하이랜드 파크 12, 보모어 12 등)",
+      smoky_heavy: "강렬한 스모키/피트 타입 (라프로익 10, 라가불린 16, 아드벡 10 등)",
+      bourbon: "미국 버번 타입 (메이커스 마크, 버팔로 트레이스 등)",
+      japan: "일본 위스키 타입 (야마자키 12, 하쿠슈 등)"
+    };
+
+    const mainView = document.getElementById("mainView");
+    const testView = document.getElementById("testView");
+    const detailView = document.getElementById("detailView");
+    const whiskyList = document.getElementById("whiskyList");
+    const searchBox = document.getElementById("searchBox");
+    const resultDiv = document.getElementById("result");
+    const detailContentDiv = document.getElementById("detailContent");
+    const quizForm = document.getElementById("quizForm");
+
+    function renderList(filter = "") {
+      whiskyList.innerHTML = "";
+      const filteredWhiskies = whiskies.filter(w =>
+        w.name.toLowerCase().includes(filter.toLowerCase()) ||
+        w.flavor.some(f => f.toLowerCase().includes(filter.toLowerCase()))
+      );
+
+      filteredWhiskies.forEach((w) => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 transform hover:-translate-y-1";
+        card.innerHTML = `
+          <img src="${w.image}" alt="${w.name}" class="rounded-lg mb-2 w-full h-auto object-cover">
+          <h3 class="text-xl font-bold text-gray-800">${w.name}</h3>
+          <p class="text-sm text-gray-500 mt-1">${w.flavor.join(", ")}</p>
+        `;
+        card.addEventListener("click", () => showDetail(w));
+        whiskyList.appendChild(card);
+      });
+    }
+
+    function startTest() {
+      mainView.classList.add("hidden");
+      testView.classList.remove("hidden");
+    }
+
+    function goBack() {
+      mainView.classList.add("hidden");
+      testView.classList.add("hidden");
+      detailView.classList.add("hidden");
+      mainView.classList.remove("hidden");
+      resultDiv.innerHTML = '';
+      resultDiv.classList.add("hidden");
+    }
+
+    function showDetail(whisky) {
+      detailContentDiv.innerHTML = `
+        <div class="text-center">
+          <img src="${whisky.image}" alt="${whisky.name}" class="rounded-lg mb-4 w-48 h-48 sm:w-64 sm:h-64 mx-auto object-cover shadow-md">
+          <h2 class="text-3xl font-bold text-gray-800 mb-2">${whisky.name}</h2>
+          <p class="text-lg text-gray-600 mb-4">${whisky.flavor.join(", ")}</p>
+          <p class="text-gray-700 leading-relaxed">${whisky.description}</p>
+        </div>
+      `;
+      mainView.classList.add("hidden");
+      detailView.classList.remove("hidden");
+    }
+
+    function calculateResult() {
+      const answers = new FormData(quizForm);
+      let totals = {};
+      let totalScore = 0;
+      let allAnswered = true;
+
+      for (let q=1; q<=6; q++) {
+        const answer = answers.get(`q${q}`);
+        if (!answer) {
+          allAnswered = false;
+          break;
+        }
+        if (scores[answer]) {
+          for (const [type, val] of Object.entries(scores[answer])) {
+            totals[type] = (totals[type] || 0) + val;
+            totalScore += val;
+          }
+        }
+      }
+
+      let html = `<h3 class="text-2xl font-bold mb-4">🥂 당신의 위스키 취향은...</h3>`;
+      if (!allAnswered) {
+        html += `<p class="text-lg text-red-500">모든 질문에 답해주세요!</p>`;
+        resultDiv.innerHTML = html;
+        resultDiv.classList.remove("hidden");
+        return;
+      }
+
+      const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+      
+      sorted.forEach(([type, val], idx) => {
+        const percent = ((val / totalScore) * 100).toFixed(1);
+        html += `<p class="mb-2 text-lg"><strong class="font-semibold">${idx + 1}.</strong> ${whiskyTypes[type]}<br> <span class="text-sm text-gray-500">점수: ${val}점 (${percent}%)</span></p>`;
+      });
+
+      resultDiv.innerHTML = html;
+      resultDiv.classList.remove("hidden");
+    }
+
+    // === 핵심 수정 부분 ===
+    async function fetchWhiskies() {
+      try {
+        const response = await fetch('https://whiskywebsite.onrender.com/api/whiskies');
+        const data = await response.json();
+        whiskies = data;
+        renderList();
+      } catch (error) {
+        console.error('위스키 데이터를 가져오는 데 실패했습니다:', error);
+        whiskyList.innerHTML = '<p class="text-red-500">데이터를 불러오는 데 실패했습니다. 서버가 실행 중인지 확인해주세요.</p>';
+      }
+    }
+
+    searchBox.addEventListener("input", (e) => renderList(e.target.value));
+    fetchWhiskies();
+  </script>
+</body>
+</html>
