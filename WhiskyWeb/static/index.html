@@ -1,209 +1,314 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나만의 위스키 가이드</title>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Whisky Website</title>
+
+  <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 한글 폰트 -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .main-bg { background-color: #f7f7f7; }
+    :root { color-scheme: light; }
+    body { font-family: "Noto Sans KR", system-ui, -apple-system, "Segoe UI",
+           "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+    .main-bg { background: #f7f7f7; }
+
+    /* 선택지 베이스/선택 상태 스타일 */
+    .opt {
+      position: relative;
+      display: block;
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      background: #fff;
+      transition: .15s background-color, .15s border-color, .15s box-shadow, .15s transform;
+    }
+    .opt:hover { background: #f3f4f6; }
+    .opt.selected {
+      border-color: #f59e0b;
+      background: #fff7ed;
+      box-shadow: 0 0 0 3px rgb(245 158 11 / 20%);
+    }
+    .opt > input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
-<body class="main-bg min-h-screen flex items-center justify-center p-4 sm:p-6">
+<body class="main-bg min-h-screen text-gray-800">
+  <div class="container mx-auto px-4 py-10 flex flex-col items-center gap-8">
 
-  <!-- 메인 뷰 -->
-  <div id="mainView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl transition-all duration-300">
-    <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-gray-800 mb-6 tracking-wide">
-      🥃 나만의 위스키 가이드
-    </h1>
-    
-    <div class="relative mb-6">
-      <input type="text" id="searchBox" placeholder="위스키 이름 또는 특징으로 검색..." 
-        class="w-full py-3 px-4 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-shadow text-gray-700 placeholder-gray-400">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" 
-        class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
-        <path stroke-linecap="round" stroke-linejoin="round" 
-          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-      </svg>
-    </div>
-    
-    <button onclick="startTest()" 
-      class="w-full bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors shadow-md transform hover:scale-105 duration-200 mb-6">
-      🧭 위스키 취향 테스트
-    </button>
-    
-    <div id="whiskyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </div>
+    <!-- 헤더 -->
+    <header class="w-full max-w-4xl text-center">
+      <h1 class="text-4xl font-extrabold">🥃 나만의 위스키 찾기</h1>
+      <p class="text-gray-600 mt-2">설문으로 취향을 알아보고, 리스트에서 골라보세요.</p>
+    </header>
 
-  <!-- 테스트 뷰 -->
-  <div id="testView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl hidden transition-all duration-300">
-    <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">🥃 위스키 취향 테스트</h2>
-    <form id="quizForm"></form>
-    <button type="button" onclick="calculateResult()" 
-      class="w-full bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors shadow-md transform hover:scale-105 duration-200 mt-4">
-      결과 보기
-    </button>
-    <div id="result" class="result hidden mt-6 p-4 rounded-lg bg-yellow-50 text-gray-800"></div>
-    <div class="back-button text-center mt-6 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer" onclick="goBack()">
-      ← 메인으로 돌아가기
+    <!-- 액션 버튼 -->
+    <div class="flex gap-3">
+      <button onclick="showView('listView')" class="px-5 py-2 rounded-full bg-gray-200 hover:bg-gray-300 transition">
+        위스키 리스트
+      </button>
+      <button onclick="showView('testView')" class="px-5 py-2 rounded-full bg-amber-500 text-white hover:bg-amber-600 shadow transition">
+        취향 테스트 시작
+      </button>
     </div>
-  </div>
 
-  <!-- 상세보기 뷰 -->
-  <div id="detailView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl hidden transition-all duration-300">
-    <div id="detailContent"></div>
-    <div class="back-button text-center mt-6 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer" onclick="goBack()">
-      ← 목록으로 돌아가기
+    <!-- 리스트 뷰 -->
+    <div id="listView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-4xl transition-all duration-300">
+      <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">위스키 리스트</h2>
+      <div id="whiskyGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
+
+    <!-- 테스트 뷰 -->
+    <div id="testView" class="container bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-2xl hidden transition-all duration-300">
+      <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">🥃 위스키 취향 테스트</h2>
+
+      <!-- 설문 폼 -->
+      <form id="quizForm" class="space-y-6"></form>
+
+      <!-- 결과 버튼 -->
+      <button type="button" onclick="calculateResult()"
+        class="w-full bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors shadow-md transform hover:scale-105 duration-200 mt-2">
+        결과 보기
+      </button>
+
+      <!-- 결과 영역 -->
+      <div id="result" class="result hidden mt-6 p-4 rounded-lg bg-yellow-50 text-gray-800"></div>
+
+      <!-- 뒤로 -->
+      <div class="back-button text-center mt-6 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer" onclick="showView('listView')">
+        ← 메인으로 돌아가기
+      </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="text-sm text-gray-400">
+      © <span id="year"></span> Whisky Website
+    </footer>
   </div>
 
   <script>
-    let whiskies = [];
+    // 전역 상태
     let questions = [];
-    let scores = {};
+    let scoresMap = {};
     let whiskyTypes = {};
+    let whiskies = [];
 
-    const mainView = document.getElementById("mainView");
+    const listView = document.getElementById("listView");
     const testView = document.getElementById("testView");
-    const detailView = document.getElementById("detailView");
-    const whiskyList = document.getElementById("whiskyList");
-    const searchBox = document.getElementById("searchBox");
-    const resultDiv = document.getElementById("result");
-    const detailContentDiv = document.getElementById("detailContent");
     const quizForm = document.getElementById("quizForm");
+    const resultDiv = document.getElementById("result");
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-    // 위스키 목록 렌더링
-    function renderList(filter = "") {
-      whiskyList.innerHTML = "";
-      const filteredWhiskies = whiskies.filter(w =>
-        w.name.toLowerCase().includes(filter.toLowerCase()) ||
-        w.flavor.some(f => f.toLowerCase().includes(filter.toLowerCase()))
-      );
-
-      filteredWhiskies.forEach((w) => {
-        const card = document.createElement("div");
-        card.className = "bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 transform hover:-translate-y-1";
-        card.innerHTML = `
-          <img src="${w.image}" alt="${w.name}" class="rounded-lg mb-2 w-full h-auto object-cover">
-          <h3 class="text-xl font-bold text-gray-800">${w.name}</h3>
-          <p class="text-sm text-gray-500 mt-1">${w.flavor.join(", ")}</p>
-        `;
-        card.addEventListener("click", () => showDetail(w));
-        whiskyList.appendChild(card);
-      });
-    }
-
-    // 테스트 시작
-    function startTest() {
-      mainView.classList.add("hidden");
-      testView.classList.remove("hidden");
-    }
-
-    // 메인으로 돌아가기
-    function goBack() {
-      mainView.classList.add("hidden");
-      testView.classList.add("hidden");
-      detailView.classList.add("hidden");
-      mainView.classList.remove("hidden");
-      resultDiv.innerHTML = '';
-      resultDiv.classList.add("hidden");
-    }
-
-    // 위스키 상세보기
-    function showDetail(whisky) {
-      detailContentDiv.innerHTML = `
-        <div class="text-center">
-          <img src="${whisky.image}" alt="${whisky.name}" class="rounded-lg mb-4 w-48 h-48 sm:w-64 sm:h-64 mx-auto object-cover shadow-md">
-          <h2 class="text-3xl font-bold text-gray-800 mb-2">${whisky.name}</h2>
-          <p class="text-lg text-gray-600 mb-4">${whisky.flavor.join(", ")}</p>
-          <p class="text-gray-700 leading-relaxed">${whisky.description}</p>
-        </div>
-      `;
-      mainView.classList.add("hidden");
-      detailView.classList.remove("hidden");
-    }
-
-    // 결과 계산
-    function calculateResult() {
-      const answers = new FormData(quizForm);
-      let totals = {};
-      let totalScore = 0;
-      let allAnswered = true;
-
-      questions.forEach(q => {
-        const answer = answers.get(q.id);
-        if (!answer) {
-          allAnswered = false;
-          return;
-        }
-        if (scores[answer]) {
-          for (const [type, val] of Object.entries(scores[answer])) {
-            totals[type] = (totals[type] || 0) + val;
-            totalScore += val;
-          }
-        }
-      });
-
-      let html = `<h3 class="text-2xl font-bold mb-4">🥂 당신의 위스키 취향은...</h3>`;
-      if (!allAnswered) {
-        html += `<p class="text-lg text-red-500">모든 질문에 답해주세요!</p>`;
-        resultDiv.innerHTML = html;
-        resultDiv.classList.remove("hidden");
-        return;
+    function showView(id) {
+      if (id === "listView") {
+        listView.classList.remove("hidden");
+        testView.classList.add("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        listView.classList.add("hidden");
+        testView.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
-
-      const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-      sorted.forEach(([type, val], idx) => {
-        const percent = ((val / totalScore) * 100).toFixed(1);
-        html += `<p class="mb-2 text-lg"><strong class="font-semibold">${idx + 1}.</strong> ${whiskyTypes[type]}<br> <span class="text-sm text-gray-500">점수: ${val}점 (${percent}%)</span></p>`;
-      });
-
-      resultDiv.innerHTML = html;
-      resultDiv.classList.remove("hidden");
     }
 
-    // 질문 렌더링
+    // ===== 데이터 로드 =====
+    async function fetchJSON(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("API 오류: " + url);
+      return await res.json();
+    }
+
+    async function init() {
+      try {
+        // 병렬 로드
+        const [q, s, t, w] = await Promise.all([
+          fetchJSON("/api/questions"),
+          fetchJSON("/api/scores"),
+          fetchJSON("/api/whiskytypes"),
+          fetchJSON("/api/whiskies"),
+        ]);
+        questions = q;
+        scoresMap = s;
+        whiskyTypes = t;
+        whiskies = w;
+
+        renderQuestions();
+        renderWhiskies();
+      } catch (e) {
+        console.error(e);
+        alert("데이터를 불러오지 못했습니다. 잠시 후 다시 시도하거나 관리자에게 문의하세요.");
+      }
+    }
+
+    // ===== 위스키 리스트 렌더링 =====
+    function renderWhiskies() {
+      const grid = document.getElementById("whiskyGrid");
+      grid.innerHTML = "";
+      whiskies.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "rounded-xl border border-gray-200 overflow-hidden bg-white shadow hover:shadow-md transition";
+
+        card.innerHTML = `
+          <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}"
+               class="w-full h-48 object-cover bg-gray-100">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold">${escapeHtml(item.name || '')}</h3>
+            <p class="text-sm text-amber-700 mt-1">${(item.flavor || []).join(", ")}</p>
+            <p class="text-sm text-gray-600 mt-2 line-clamp-3">${escapeHtml(item.description || '')}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ===== 설문 렌더링 (라벨 전체 클릭 & 선택 강조) =====
     function renderQuestions() {
       quizForm.innerHTML = "";
       questions.forEach(q => {
-        const div = document.createElement("div");
-        div.className = "question bg-gray-50 p-4 rounded-lg mb-4";
-        div.innerHTML = `<p class="text-lg font-semibold text-gray-700 mb-2">${q.text}</p>`;
-        q.options.forEach(opt => {
-          div.innerHTML += `
-            <label class="block cursor-pointer py-2 px-4 rounded-md mb-2 bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
-              <input type="radio" name="${q.id}" value="${opt.value}" class="mr-2"> ${opt.label}
-            </label>`;
+        const wrap = document.createElement("div");
+        wrap.className = "question bg-gray-50 p-4 rounded-lg";
+        wrap.innerHTML = `<p class="text-lg font-semibold text-gray-700 mb-2">${escapeHtml(q.text)}</p>`;
+
+        (q.options || []).forEach(opt => {
+          const id = `${q.id}_${opt.value}`;
+          const label = document.createElement("label");
+          label.setAttribute("for", id);
+          label.className = "opt";
+          label.tabIndex = 0; // 키보드 접근성
+          label.dataset.qid = q.id;
+          label.dataset.value = opt.value;
+
+          label.innerHTML = `
+            <input id="${id}" type="radio" name="${q.id}" value="${opt.value}">
+            <span>${escapeHtml(opt.label)}</span>
+          `;
+          wrap.appendChild(label);
         });
-        quizForm.appendChild(div);
+
+        quizForm.appendChild(wrap);
       });
+
+      // 이벤트 위임
+      quizForm.addEventListener("click", onOptionClick);
+      quizForm.addEventListener("keydown", onOptionKeydown);
     }
 
-    // 데이터 불러오기
-    async function fetchData() {
-      try {
-        const [wRes, qRes, sRes, tRes] = await Promise.all([
-          fetch('/api/whiskies'),
-          fetch('/api/questions'),
-          fetch('/api/scores'),
-          fetch('/api/whiskytypes')
-        ]);
-        whiskies = await wRes.json();
-        questions = await qRes.json();
-        scores = await sRes.json();
-        whiskyTypes = await tRes.json();
+    function onOptionClick(e) {
+      const label = e.target.closest("label.opt");
+      if (!label) return;
+      const qid = label.dataset.qid;
 
-        renderList();
-        renderQuestions();
-      } catch (err) {
-        console.error("데이터 로딩 실패:", err);
-        whiskyList.innerHTML = '<p class="text-red-500">데이터를 불러오는 데 실패했습니다.</p>';
+      // 라디오 체크
+      const input = label.querySelector('input[type="radio"]');
+      if (input) {
+        input.checked = true;
+        setSelectedVisual(qid, label);
       }
     }
 
-    searchBox.addEventListener("input", (e) => renderList(e.target.value));
-    fetchData();
+    function onOptionKeydown(e) {
+      const focusLabel = e.target.closest("label.opt");
+      if (!focusLabel) return;
+
+      const keys = [" ", "Enter", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+      if (!keys.includes(e.key)) return;
+      e.preventDefault();
+
+      const qid = focusLabel.dataset.qid;
+      const labels = [...quizForm.querySelectorAll(`label.opt[data-qid="${qid}"]`)];
+      let idx = labels.indexOf(focusLabel);
+
+      if (e.key === " " || e.key === "Enter") {
+        const input = focusLabel.querySelector('input[type="radio"]');
+        if (input) {
+          input.checked = true;
+          setSelectedVisual(qid, focusLabel);
+        }
+        return;
+      }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") idx = Math.max(0, idx - 1);
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") idx = Math.min(labels.length - 1, idx + 1);
+      labels[idx].focus();
+    }
+
+    function setSelectedVisual(qid, chosenLabel) {
+      document.querySelectorAll(`label.opt[data-qid="${qid}"]`).forEach(l => l.classList.remove("selected"));
+      chosenLabel.classList.add("selected");
+    }
+
+    // ===== 결과 계산 =====
+    async function calculateResult() {
+      // 1) 응답 수집
+      const answers = new Map();
+      questions.forEach(q => {
+        const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+        if (checked) answers.set(q.id, checked.value);
+      });
+
+      // 2) 미응답 처리
+      if (answers.size !== questions.length) {
+        resultDiv.classList.remove("hidden");
+        resultDiv.innerHTML = `<p class="text-lg text-red-500">모든 질문에 답해주세요!</p>`;
+        // 첫 미응답으로 스크롤
+        const firstUn = questions.find(q => !answers.get(q.id));
+        if (firstUn) {
+          const block = quizForm.querySelector(`label.opt[data-qid="${firstUn.id}"]`);
+          block?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        return;
+      }
+
+      // 3) 점수 누적
+      const totals = {}; // type -> score
+      for (const [, ansKey] of answers) {
+        const map = scoresMap[ansKey] || {};
+        for (const [typ, sc] of Object.entries(map)) {
+          totals[typ] = (totals[typ] || 0) + (Number(sc) || 0);
+        }
+      }
+
+      // 4) 최고 타입 선택
+      let bestType = null, bestScore = -Infinity;
+      Object.entries(totals).forEach(([typ, sc]) => {
+        if (sc > bestScore) { bestType = typ; bestScore = sc; }
+      });
+
+      // 5) 결과 출력
+      const desc = whiskyTypes[bestType] || "타입 설명을 찾을 수 없습니다.";
+      resultDiv.classList.remove("hidden");
+      resultDiv.innerHTML = `
+        <h3 class="text-2xl font-bold mb-2">결과: <span class="text-amber-600">${escapeHtml(bestType || "알 수 없음")}</span></h3>
+        <p class="mb-4">${escapeHtml(desc)}</p>
+        <div class="text-sm text-gray-500">총점: ${bestScore || 0}</div>
+      `;
+
+      // 6) 결과로 스크롤
+      resultDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // ===== 유틸 =====
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 시작
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
