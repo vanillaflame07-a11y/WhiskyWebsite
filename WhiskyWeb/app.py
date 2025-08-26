@@ -1,3 +1,6 @@
+import requests
+import csv
+import io
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
@@ -5,55 +8,32 @@ app = Flask(__name__, static_folder="static")
 CORS(app)
 
 # -------------------------------
-# 위스키 데이터
+# 1. '웹에 게시'를 통해 생성된 CSV 링크를 여기에 붙여넣으세요.
 # -------------------------------
-whiskies_data = [
-    {
-        "name": "글렌리벳 1200년",
-        "image": "https://placehold.co/400x400/FFD89C/6B4A00?text=Glenlivet",
-        "flavor": ["과일", "플로럴"],
-        "description": "가볍고 신선한 과일 향이 특징이며, 부드러운 목 넘김으로 위스키 입문자에게 사랑받는 싱글몰트입니다."
-    },
-    {
-        "name": "글렌피딕 12년",
-        "image": "https://placehold.co/400x400/D4F0BA/3C542E?text=Glenfiddich",
-        "flavor": ["배", "사과", "오크"],
-        "description": "싱글몰트의 대명사로 불리며, 신선한 과일과 미묘한 오크 향이 조화로운 부드러운 위스키입니다."
-    },
-    {
-        "name": "발베니 더블우드 12년",
-        "image": "https://placehold.co/400x400/E3C293/5F4628?text=Balvenie",
-        "flavor": ["바닐라", "꿀", "셰리"],
-        "description": "두 종류의 오크통에서 숙성하여 부드러운 바닐라와 달콤한 꿀, 약간의 셰리 향이 어우러지는 복합적인 맛이 매력적입니다."
-    },
-    {
-        "name": "맥캘란 12년",
-        "image": "https://placehold.co/400x400/A05C5C/301A1A?text=Macallan",
-        "flavor": ["건과일", "견과류", "초콜릿"],
-        "description": "강렬한 셰리 풍미가 특징이며, 풍부한 건과일과 초콜릿 향이 진하고 깊은 인상을 남기는 위스키입니다."
-    },
-    {
-        "name": "탈리스커 10년",
-        "image": "https://placehold.co/400x400/87B4C6/2A3B43?text=Talisker",
-        "flavor": ["바닷바람", "피트", "스모키"],
-        "description": "스카이 섬의 거친 자연을 닮은 강렬한 바닷바람과 후추 향, 은은한 스모키함이 공존하는 개성 있는 위스키입니다."
-    },
-    {
-        "name": "라프로익 10년",
-        "image": "https://placehold.co/400x400/808080/FFFFFF?text=Laphroaig",
-        "flavor": ["피트", "스모키", "요오드"],
-        "description": "세상에서 가장 강한 피트 위스키 중 하나로, 병원 소독약 같은 독특하고 강렬한 향이 매니아층을 형성하고 있습니다."
-    },
-    {
-        "name": "야마자키 12년",
-        "image": "https://placehold.co/400x400/F0E0D0/544C40?text=Yamazaki",
-        "flavor": ["과일", "바닐라", "오크"],
-        "description": "일본 위스키의 선구자로 부드럽고 섬세한 맛이 특징입니다. 과일과 오크의 풍미가 조화롭고 깔끔합니다."
-    }
-]
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1HA055BZ-PsNbKgk8KjKCGsoBGJ-ahANAXxsoRGiW5XA/edit?usp=sharing"
 
 # -------------------------------
-# 테스트 질문/점수/타입 데이터
+# 2. 위스키 데이터를 구글 시트에서 가져오는 함수
+# -------------------------------
+def get_whiskies_from_sheet():
+    """게시된 구글 시트 CSV 링크에서 위스키 데이터를 가져와 파싱합니다."""
+    response = requests.get(SHEET_URL)
+    response.raise_for_status()  # 요청이 실패하면 에러를 발생시킵니다.
+
+    # CSV 데이터를 파이썬 딕셔너리 리스트로 변환합니다.
+    csv_file = io.StringIO(response.content.decode('utf-8'))
+    reader = csv.DictReader(csv_file)
+    data = list(reader)
+
+    # 프론트엔드가 사용할 수 있도록 'flavor' 항목을 문자열에서 리스트로 변환합니다.
+    for item in data:
+        if item.get('flavor'):
+            item['flavor'] = [f.strip() for f in item['flavor'].split(',')]
+    return data
+
+# -------------------------------
+# 3. 질문, 점수, 타입 데이터 (기존과 동일)
+#    (이 데이터들도 위스키처럼 별도 시트로 만들어 가져올 수 있습니다.)
 # -------------------------------
 questions = [
     {
@@ -135,11 +115,19 @@ whisky_types = {
 }
 
 # -------------------------------
-# API 엔드포인트
+# 4. API 엔드포인트
 # -------------------------------
 @app.route("/api/whiskies")
 def get_whiskies():
-    return jsonify(whiskies_data)
+    try:
+        whiskies_data = get_whiskies_from_sheet()
+        return jsonify(whiskies_data)
+    except requests.RequestException as e:
+        # 네트워크 에러 등 URL 요청 실패 시
+        return jsonify({"error": f"Failed to fetch data from Google Sheets: {e}"}), 503
+    except Exception as e:
+        # 데이터 처리 중 에러 발생 시
+        return jsonify({"error": f"An error occurred while processing data: {e}"}), 500
 
 @app.route("/api/questions")
 def get_questions():
@@ -162,4 +150,3 @@ def serve_index():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
