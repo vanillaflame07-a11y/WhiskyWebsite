@@ -64,7 +64,7 @@ def _refresh_cache():
     # --- questions + options 병합 ---
     opt_by_q = {}
     for o in rows_o:
-        qid = (o.get("question_id") or "").strip()
+        qid = (o.get("qid") or "").strip()
         if not qid:
             continue
         opt_by_q.setdefault(qid, []).append({
@@ -153,3 +153,4 @@ def serve_index():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))  # Render는 PORT를 환경변수로 넘겨줌
     app.run(host="0.0.0.0", port=port)
+
